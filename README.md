@@ -1,6 +1,9 @@
 # LLM Output Evaluation System
 An end-to-end evaluation framework for improving the quality of LLM-generated responses to user queries from uploaded documents. This system enables user feedback collection, automatic scoring, answer ranking, and a retry mechanism for improving underperforming outputs.
-#### 🌐 Live Demo - [DocuChat AI]()
+
+## Video
+https://github.com/user-attachments/assets/f1a92ae0-eef6-439d-bb18-dd5fe9626abd
+
 ---
 
 ## Premise
@@ -10,6 +13,12 @@ Users of an internal LLM-based tool complained about vague, non-actionable answe
 - Surfaces bad answers
 - Tracks performance regressions over time
 - Supports iterative improvement
+
+---
+
+## Prerequisites
+- Python-3.12
+- Ollama Installed - Use `ollama pull qwen2.5:0.5b` for model download.
 
 ---
 
@@ -30,7 +39,7 @@ Users of an internal LLM-based tool complained about vague, non-actionable answe
   - ROUGE-L Scores
 - Feedback tagged as negative can be used to retry and generate improved answers.
 - Evaluation scores are visible when Developer Mode is toggled.
-## Analytics & Analysis Panel
+### Analytics & Analysis Panel
 - View detailed analysis of system performance:
   - Ranked answers based on evaluation metrics
   - Surfaced low-quality outputs
@@ -65,11 +74,11 @@ npm install
 
 #### Set up environment variables (.env file): *(in backend folder)*
 ```bash
-GOOGLE_API_KEY=<your_google_api_key>
-DB_NAME=<db_name>
-DB_USER=<db_user>
-DB_PASSWORD=<db_pswd>
-DB_HOST=<host>
+GOOGLE_API_KEY=AIzaSyCcuxazr__yGZM038YokopKb03o3cjzdA0
+DB_NAME=llm_eval_db
+DB_USER=llm_eval_db_user
+DB_PASSWORD=9kYts546iqR6JO3Kw0jYV1IJQTF7L4PZ
+DB_HOST=dpg-d0qvvnruibrs73f0kup0-a.oregon-postgres.render.com
 DB_PORT=5432
 ```
 
@@ -107,6 +116,7 @@ npm run dev
 
 #### GET /analysis
 - Response: { "details": <ranking_regressions> }
+
 ---
 
 ## Testing
