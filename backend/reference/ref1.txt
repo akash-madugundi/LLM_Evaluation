@@ -1,0 +1,5 @@
+Artificial Intelligence (AI) finds applications across various industries, including:
+Healthcare: AI is leveraged for early disease detection, diagnostic imaging, treatment recommendation, and personalized medicine.
+Finance: Used in algorithmic trading, credit scoring, fraud detection, and risk assessment.
+Retail: Powers recommendation engines, customer behavior analytics, inventory optimization, and demand forecasting.
+Transportation: Enables autonomous vehicles, traffic prediction, route optimization, and fleet management systems.
