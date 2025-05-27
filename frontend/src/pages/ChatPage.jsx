@@ -8,6 +8,8 @@ import PdfUpload from "@/components/PdfUpload";
 import ChatInterface from "@/components/ChatInterface";
 import AnalysisModal from "@/components/AnalysisModal";
 
+const backendUrl = import.meta.env.VITE_BACKEND_URL;
+
 const ChatPage = () => {
   const [pdfFile, setPdfFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -96,7 +98,7 @@ const ChatPage = () => {
       const formData = new FormData();
       formData.append("file", pdfFile);
 
-      const response = await fetch(`${VITE_BACKEND_URL}/upload-pdf`, {
+      const response = await fetch(`${backendUrl}/upload-pdf`, {
         method: "POST",
         body: formData,
       });
@@ -152,7 +154,7 @@ const ChatPage = () => {
     setMessages((prev) => [...prev, newUserMessage]);
 
     try {
-      const response = await fetch(`${VITE_BACKEND_URL}/ask`, {
+      const response = await fetch(`${backendUrl}/ask`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -251,7 +253,7 @@ const ChatPage = () => {
 
     // Send feedback to backend
     try {
-      await fetch(`${VITE_BACKEND_URL}/feedback`, {
+      await fetch(`${backendUrl}/feedback`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -277,7 +279,7 @@ const ChatPage = () => {
     setRetryingMessageId(message.id);
 
     try {
-      const response = await fetch(`${VITE_BACKEND_URL}/retry`, {
+      const response = await fetch(`${backendUrl}/retry`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -335,7 +337,7 @@ const ChatPage = () => {
     setAnalysisData(null);
 
     try {
-      const response = await fetch(`${VITE_BACKEND_URL}/analysis`);
+      const response = await fetch(`${backendUrl}/analysis`);
       if (!response.ok) {
         throw new Error(`Error: ${response.status} ${response.statusText}`);
       }
