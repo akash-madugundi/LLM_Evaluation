@@ -36,13 +36,13 @@
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
+    --background: 224 71% 4%; /* Darker background */
     --foreground: 210 40% 98%;
 
-    --card: 222.2 84% 4.9%;
+    --card: 222.2 84% 6.9%; /* Darker card background */
     --card-foreground: 210 40% 98%;
 
-    --popover: 222.2 84% 4.9%;
+    --popover: 224 71% 4%;
     --popover-foreground: 210 40% 98%;
 
     --primary: 217 91% 60%;
@@ -60,7 +60,7 @@
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 217.2 32.6% 17.5%;
+    --border: 217.2 32.6% 22.5%; /* Slightly lighter border for dark mode */
     --input: 217.2 32.6% 17.5%;
     --ring: 217 91% 60%;
   }
@@ -83,7 +83,7 @@
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-secondary;
+  @apply bg-secondary/50; /* Made track a bit more subtle */
   border-radius: 10px;
 }
 

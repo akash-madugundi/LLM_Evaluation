@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
-import { MessageSquare, Settings } from "lucide-react";
+import { MessageSquare, Code, BarChart2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import FeedbackDialog from "@/components/FeedbackDialog";
 import PdfUpload from "@/components/PdfUpload";
 import ChatInterface from "@/components/ChatInterface";
+import AnalysisModal from "@/components/AnalysisModal";
 
 const ChatPage = () => {
   const [pdfFile, setPdfFile] = useState(null);
@@ -17,6 +18,9 @@ const ChatPage = () => {
   const [currentMessageForFeedback, setCurrentMessageForFeedback] =
     useState(null);
   const [developerMode, setDeveloperMode] = useState(false);
+  const [analysisData, setAnalysisData] = useState(null);
+  const [showAnalysisModal, setShowAnalysisModal] = useState(false);
+  const [loadingAnalysis, setLoadingAnalysis] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -27,6 +31,9 @@ const ChatPage = () => {
     }
     if (savedDevMode) {
       setDeveloperMode(JSON.parse(savedDevMode));
+    }
+    if (!document.documentElement.classList.contains("dark")) {
+      document.documentElement.classList.add("dark");
     }
   }, []);
 
@@ -322,6 +329,35 @@ const ChatPage = () => {
     }
   };
 
+  const handleShowAnalysis = async () => {
+    setShowAnalysisModal(true);
+    setLoadingAnalysis(true);
+    setAnalysisData(null);
+
+    try {
+      const response = await fetch("http://localhost:5000/analysis");
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      setAnalysisData(data);
+
+      toast({
+        title: "Analysis Loaded",
+        description: "Document analysis data is now available.",
+      });
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: err.message || "Unable to load analysis data.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingAnalysis(false);
+    }
+  };
+
   const isPdfProcessed = messages.some(
     (msg) => msg.sender === "AI" && msg.text.includes("processed the document")
   );
@@ -331,29 +367,43 @@ const ChatPage = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="w-full max-w-3xl h-[calc(100vh-4rem)] flex flex-col bg-card/80 backdrop-blur-md shadow-2xl rounded-xl overflow-hidden border border-primary/20"
+      className="w-full max-w-3xl h-[calc(100vh-4rem)] flex flex-col bg-card/90 backdrop-blur-lg shadow-2xl rounded-xl overflow-hidden border border-primary/30"
     >
-      <header className="p-4 border-b border-primary/20 flex justify-between items-center bg-slate-800/50">
-        <div className="flex items-center space-x-2">
+      <header className="p-4 border-b border-primary/30 flex justify-between items-center bg-card/70 backdrop-blur-sm">
+        <div className="flex items-center space-x-3">
           <MessageSquare className="h-8 w-8 text-primary" />
           <h1 className="text-2xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-primary via-accent to-primary">
             AI Chat Agent
           </h1>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setDeveloperMode(!developerMode)}
-          title={
-            developerMode ? "Disable Developer Mode" : "Enable Developer Mode"
-          }
-        >
-          <Settings
-            className={`h-5 w-5 ${
-              developerMode ? "text-accent" : "text-muted-foreground"
-            }`}
-          />
-        </Button>
+        <div className="flex items-center space-x-2">
+          {isPdfProcessed && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleShowAnalysis}
+              title="Show Document Analysis"
+              className="text-muted-foreground hover:text-accent hover:bg-accent/10 transition-colors"
+            >
+              <BarChart2 className="h-5 w-5" />
+            </Button>
+          )}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setDeveloperMode(!developerMode)}
+            title={
+              developerMode ? "Disable Developer Mode" : "Enable Developer Mode"
+            }
+            className={`${
+              developerMode
+                ? "text-accent bg-accent/10"
+                : "text-muted-foreground"
+            } hover:text-accent hover:bg-accent/10 transition-colors`}
+          >
+            <Code className="h-5 w-5" />
+          </Button>
+        </div>
       </header>
 
       {!isPdfProcessed ? (
@@ -391,6 +441,12 @@ const ChatPage = () => {
           message={currentMessageForFeedback}
         />
       )}
+      <AnalysisModal
+        isOpen={showAnalysisModal}
+        onClose={() => setShowAnalysisModal(false)}
+        analysisData={analysisData}
+        loading={loadingAnalysis}
+      />
     </motion.div>
   );
 };

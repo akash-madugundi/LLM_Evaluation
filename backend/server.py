@@ -22,6 +22,11 @@ from rouge.rouge import Rouge
 import asyncio
 from asyncio.subprocess import PIPE, create_subprocess_exec
 
+import json
+from datetime import datetime
+import os
+from collections import defaultdict
+
 def load_textfiles(references, hypothesis):
     combined_ref = " ".join(line.strip() for line in references)
     combined_hypo = " ".join(line.strip() for line in hypothesis)
@@ -68,6 +73,19 @@ conn = psycopg2.connect(
     host=DB_HOST,
     port=DB_PORT
 )
+
+LOG_FILE = "logs/qa_log.jsonl"
+
+def log_interaction(question, answer, metrics=None):
+    os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
+    log_entry = {
+        "timestamp": datetime.utcnow().isoformat(),
+        "question": question,
+        "answer": answer,
+        "metrics": metrics or {},
+    }
+    with open(LOG_FILE, "a", encoding="utf-8") as f:
+        f.write(json.dumps(log_entry) + "\n")
 
 # FastAPI setup
 app = FastAPI()
@@ -218,6 +236,7 @@ async def ask_question(request: QueryRequest):
             ref, hypo = load_textfiles(reference_lines, [answer_text])
             scores = score(ref, hypo)
             print("Scores:", scores)
+            log_interaction(request.question, answer_text, scores if matched_ref_file else None)
 
             return {
                 "answer": answer_text,
@@ -281,6 +300,7 @@ async def retry(data: RetryRequest):
             ref, hypo = load_textfiles(reference_lines, [improved_answer])
             scores = score(ref, hypo)
             print("Scores:", scores)
+            log_interaction(data.question, improved_answer, scores if matched_ref_file else None)
 
             return {
                 "improved_answer": improved_answer,
@@ -314,3 +334,67 @@ async def call_ollama_model(prompt: str) -> str:
 
     result = await loop.run_in_executor(None, run_blocking_subprocess)
     return result
+
+def load_logs():
+    entries = []
+    if not os.path.exists(LOG_FILE):
+        return entries
+    with open(LOG_FILE, "r", encoding="utf-8") as f:
+        for line in f:
+            entries.append(json.loads(line))
+    return entries
+
+def rank_by_metric(entries, metric_name="ROUGE_L"):
+    # Filter entries with metrics containing the metric_name
+    filtered = [e for e in entries if e.get("metrics") and metric_name in e["metrics"]]
+    # Sort descending by metric score
+    ranked = sorted(filtered, key=lambda e: e["metrics"][metric_name], reverse=True)
+    return ranked
+
+def surface_low_scores(entries, metric_name="ROUGE_L", threshold=0.5):
+    # Return all with score below threshold
+    return [e for e in entries if e.get("metrics", {}).get(metric_name, 1) < threshold]
+
+def detect_regressions(entries, metric_name="ROUGE_L"):
+    # Group by question (or normalized question)
+    question_map = defaultdict(list)
+    for e in entries:
+        q = e["question"].lower()
+        question_map[q].append(e)
+
+    regressions = []
+    for q, q_entries in question_map.items():
+        # Sort by timestamp ascending
+        sorted_entries = sorted(q_entries, key=lambda x: x["timestamp"])
+        for i in range(1, len(sorted_entries)):
+            prev = sorted_entries[i-1]["metrics"].get(metric_name, 1)
+            curr = sorted_entries[i]["metrics"].get(metric_name, 1)
+            if curr < prev:
+                regressions.append({
+                    "question": q,
+                    "previous_score": prev,
+                    "current_score": curr,
+                    "timestamp_prev": sorted_entries[i-1]["timestamp"],
+                    "timestamp_curr": sorted_entries[i]["timestamp"],
+                    "answer_prev": sorted_entries[i-1]["answer"],
+                    "answer_curr": sorted_entries[i]["answer"],
+                })
+    return regressions
+
+from fastapi import Query
+
+@app.get("/analysis")
+async def analysis(
+    action: str = Query("rank", enum=["rank", "bad", "regressions"]),
+    metric: str = Query("ROUGE_L")
+):
+    entries = load_logs()
+    if action == "rank":
+        ranked = rank_by_metric(entries, metric)
+        return {"top_answers": ranked[:10]}
+    elif action == "bad":
+        bad = surface_low_scores(entries, metric, threshold=0.5)
+        return {"low_scores": bad}
+    elif action == "regressions":
+        regs = detect_regressions(entries, metric)
+        return {"regressions": regs}
