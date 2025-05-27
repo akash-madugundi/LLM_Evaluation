@@ -1,6 +1,7 @@
 # Frontend
 frontend/node_modules/
 frontend/package-lock.json
+frontend/.env
 
 # Backend
 __pycache__/

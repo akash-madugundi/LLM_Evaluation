@@ -96,7 +96,7 @@ const ChatPage = () => {
       const formData = new FormData();
       formData.append("file", pdfFile);
 
-      const response = await fetch("http://localhost:5000/upload-pdf", {
+      const response = await fetch(`${VITE_BACKEND_URL}/upload-pdf`, {
         method: "POST",
         body: formData,
       });
@@ -152,7 +152,7 @@ const ChatPage = () => {
     setMessages((prev) => [...prev, newUserMessage]);
 
     try {
-      const response = await fetch("http://localhost:5000/ask", {
+      const response = await fetch(`${VITE_BACKEND_URL}/ask`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -251,7 +251,7 @@ const ChatPage = () => {
 
     // Send feedback to backend
     try {
-      await fetch("http://localhost:5000/feedback", {
+      await fetch(`${VITE_BACKEND_URL}/feedback`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -277,7 +277,7 @@ const ChatPage = () => {
     setRetryingMessageId(message.id);
 
     try {
-      const response = await fetch("http://localhost:5000/retry", {
+      const response = await fetch(`${VITE_BACKEND_URL}/retry`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -335,7 +335,7 @@ const ChatPage = () => {
     setAnalysisData(null);
 
     try {
-      const response = await fetch("http://localhost:5000/analysis");
+      const response = await fetch(`${VITE_BACKEND_URL}/analysis`);
       if (!response.ok) {
         throw new Error(`Error: ${response.status} ${response.statusText}`);
       }
