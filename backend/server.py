@@ -1,5 +1,4 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException
-from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 import os
@@ -7,7 +6,6 @@ import shutil
 import uuid
 import PyPDF2
 import tempfile
-import psycopg2
 
 import google.generativeai as genai
 from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
@@ -16,9 +14,6 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain.chains.question_answering import load_qa_chain
 from langchain_core.prompts import PromptTemplate
 
-from bleu.bleu import Bleu
-from rouge.rouge import Rouge
-
 import asyncio
 from asyncio.subprocess import PIPE, create_subprocess_exec
 
@@ -26,53 +21,13 @@ import json
 from datetime import datetime
 import os
 from collections import defaultdict
-
-def load_textfiles(references, hypothesis):
-    combined_ref = " ".join(line.strip() for line in references)
-    combined_hypo = " ".join(line.strip() for line in hypothesis)
-
-    # Wrap both in dict format expected by scorers
-    refs = {0: [combined_ref]}
-    hypo = {0: [combined_hypo]}
-
-    return refs, hypo
-
-def score(ref, hypo):
-    scorers = [
-        (Bleu(4), ["Bleu_1", "Bleu_2", "Bleu_3", "Bleu_4"]),
-        (Rouge(), "ROUGE_L"),
-    ]
-    final_scores = {}
-
-    for scorer, method in scorers:
-        score_val, scores = scorer.compute_score(ref, hypo)
-        if isinstance(score_val, list):
-            for m, s in zip(method, score_val):
-                final_scores[m] = s
-        else:
-            final_scores[method] = score_val
-
-    return final_scores
+from db import conn
+from models import QueryRequest, PDFContentRequest, FeedbackRequest, RetryRequest
+from utils.scorer import load_textfiles, score
 
 # Load environment variables
 load_dotenv()
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
-
-# Set up PostgreSQL connection
-DB_NAME = os.getenv("DB_NAME")
-DB_USER = os.getenv("DB_USER")
-DB_PASSWORD = os.getenv("DB_PASSWORD")
-DB_HOST = os.getenv("DB_HOST")
-DB_PORT = os.getenv("DB_PORT")
-
-# Connect to PostgreSQL
-conn = psycopg2.connect(
-    dbname=DB_NAME,
-    user=DB_USER,
-    password=DB_PASSWORD,
-    host=DB_HOST,
-    port=DB_PORT
-)
 
 LOG_FILE = "logs/qa_log.jsonl"
 
@@ -98,11 +53,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Request body model
-class QARequest(BaseModel):
-    text: str
-    question: str
 
 # Utility functions
 def extract_text_from_pdf(file_path: str) -> str:
@@ -155,21 +105,6 @@ def get_conversational_chain():
 
 current_index_name = None
 
-class PDFContentRequest(BaseModel):
-    text: str
-
-class QueryRequest(BaseModel):
-    question: str
-
-class FeedbackRequest(BaseModel):
-    message_id: int
-    feedback_type: str | None = None  # 'up', 'down', or 'comment'
-    comment: str | None = None
-
-class RetryRequest(BaseModel):
-    question: str
-    response: str
-
 @app.post("/upload-pdf")
 async def upload_pdf(file: UploadFile = File(...)):
     global current_index_name
@@ -219,8 +154,10 @@ async def ask_question(request: QueryRequest):
 
         # Define keyword sets and associated reference files
         keyword_triggers = [
-            ({"ai", "applications"}, "reference/ref1.txt"),
-            ({"difference", "supervised", "unsupervised"}, "reference/ref2.txt")
+            ({"ai", "applications"}, "reference/ref1_1.txt"),
+            ({"difference", "supervised", "unsupervised"}, "reference/ref2_1.txt"),
+            ({"machine learning", "deep learning"}, "reference/ref3_1.txt"),
+            ({"ml", "dl"}, "reference/ref3_1.txt")
         ]
 
         matched_ref_file = None
@@ -283,8 +220,10 @@ async def retry(data: RetryRequest):
 
         # Define keyword sets and associated reference files
         keyword_triggers = [
-            ({"ai", "applications"}, "reference/ref1.txt"),
-            ({"difference", "supervised", "unsupervised"}, "reference/ref2.txt")
+            ({"ai", "applications"}, "reference/ref1_2.txt"),
+            ({"difference", "supervised", "unsupervised"}, "reference/ref2_2.txt"),
+            ({"machine learning", "deep learning"}, "reference/ref3_2.txt"),
+            ({"ml", "dl"}, "reference/ref3_2.txt")
         ]
 
         matched_ref_file = None

@@ -1,0 +1,4 @@
+Machine Learning vs Deep Learning 
+  - Machine Learning (ML): Subset of AI where algorithms learn from data. 
+  - Deep Learning: A specialized type of ML using neural networks with many layers (e.g., 
+CNNs, RNNs).

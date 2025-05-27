@@ -1,0 +1,5 @@
+AI is used in a variety of fields including: 
+  - Healthcare: Disease detection, personalized medicine. 
+  - Finance: Algorithmic trading, fraud detection. 
+  - Retail: Recommendation systems, demand forecasting. 
+  - Transportation: Self-driving cars, route optimization. 

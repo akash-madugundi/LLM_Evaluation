@@ -1,0 +1,36 @@
+### Definition: Machine Learning (ML)
+Machine Learning is a broad category that encompasses a wide range of AI techniques used for tasks such as classification, regression, and prediction.
+- **Data-driven:** ML algorithms learn from data.
+  - Example: A decision tree can predict whether an email is spam or not.
+- **Unsupervised learning:** ML algorithms learn without labeled data.
+  - Example: K-means clustering can group similar items together.
+- **Supervised learning:** ML algorithms use labeled training data to make predictions.
+  - Example: Support Vector Machines (SVM) uses labeled images for image recognition.
+
+### Definition: Deep Learning
+Deep Learning is a specific type of machine learning where the models are trained with multiple layers of neurons, usually in a neural network architecture.
+- **Leveraging previous knowledge:** ML algorithms learn from previously learned data and extract features.
+  - Example: Convolutional Neural Networks (CNN) work on images by identifying patterns within the image.
+- **Combining multiple layers:** ML models can be trained with many different types of layers, each serving a specific purpose.
+  - Example: A neural network can have a convolutional layer for image processing and an RNN layer for language modeling.
+### Key Differences:
+1. **Definition**:
+   - Machine Learning covers wide-ranging AI techniques that involve learning from data.
+   - Deep Learning specializes in models trained with multiple layers of neurons, often including CNNs, RNNs, and other architectures like Transformer models.
+2. **Learning Process**:
+   - ML algorithms learn from raw data.
+   - Deep Learning models learn through the process of training using a large dataset, which includes labeled examples.
+3. **Representation**:
+   - ML models represent input data with parameters that are learned by the model during training.
+   - Deep Learning models use deep layers and potentially many hidden layers to capture complex patterns in data.
+4. **Simplification of Data**:
+   - ML algorithms often deal with simple, tabular or feature-based datasets.
+   - Deep Learning can handle more complex input types such as images, audio, video, etc., by leveraging the power of neural networks trained on large datasets.
+5. **Learning Speed**:
+   - While some forms of machine learning (e.g., regression and classification) have very fast learning times due to their simplicity, deep learning is much slower computationally.
+   - For tasks like image recognition, a deep neural network can process millions or even billions of training examples per second.
+6. **Model Complexity**:
+   - ML models are simpler in terms of the architecture they use and the types of features they learn from data.
+   - Deep Learning architectures are much more complex due to their multiple layers, which requires additional computational resources.
+
+In summary, Machine Learning focuses on learning algorithms that can extract patterns or structure from raw data. Deep Learning is a specific approach within ML that employs neural networks with many layers and is designed for tasks such as image and language processing where the underlying data has been simplified by using deep architectures.

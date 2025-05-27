@@ -1,0 +1,6 @@
+Supervised Learning
+Learns from labeled data to predict outcomes for new data.
+Example Algorithms: Linear Regression, Support Vector Machines (SVM), Decision Trees, k-Nearest Neighbors (k-NN)
+Unsupervised Learning
+Finds hidden patterns or structures in unlabeled data.
+Example Algorithms: K-Means Clustering, Principal Component Analysis (PCA), DBSCAN
