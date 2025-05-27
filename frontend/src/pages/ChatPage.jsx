@@ -174,6 +174,7 @@ const ChatPage = () => {
       const newAiMessage = {
         id: Date.now() + 1,
         sender: "AI",
+        question: inputValue,
         text: data.answer,
         timestamp: formattedTime,
         bleu1:
@@ -262,6 +263,65 @@ const ChatPage = () => {
     setShowFeedbackModal(true);
   };
 
+  const [retryingMessageId, setRetryingMessageId] = useState(null);
+  const handleRetry = async (message) => {
+    setShowFeedbackModal(false);
+    setCurrentMessageForFeedback(null);
+    setRetryingMessageId(message.id);
+
+    try {
+      const response = await fetch("http://localhost:5000/retry", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          question: message.question, // assuming you've stored the question somewhere
+          response: message.text,
+        }),
+      });
+
+      const data = await response.json();
+      // console.log("Retry response:", data);
+
+      if (data.improved_answer) {
+        setMessages((prevMessages) =>
+          prevMessages.map((msg) =>
+            msg.id === message.id
+              ? {
+                  ...msg,
+                  text: data.improved_answer,
+                  bleu1:
+                    data.metrics?.Bleu_1 !== undefined
+                      ? data.metrics.Bleu_1.toFixed(2)
+                      : "0.00",
+                  bleu2:
+                    data.metrics?.Bleu_2 !== undefined
+                      ? data.metrics.Bleu_2.toFixed(2)
+                      : "0.00",
+                  bleu3:
+                    data.metrics?.Bleu_3 !== undefined
+                      ? data.metrics.Bleu_3.toFixed(2)
+                      : "0.00",
+                  bleu4:
+                    data.metrics?.Bleu_4 !== undefined
+                      ? data.metrics.Bleu_4.toFixed(2)
+                      : "0.00",
+                  rogue:
+                    data.metrics?.ROUGE_L !== undefined
+                      ? data.metrics.ROUGE_L.toFixed(2)
+                      : "0.00",
+                  feedback: null, // reset feedback if needed
+                }
+              : msg
+          )
+        );
+      }
+    } catch (error) {
+      console.error("Retry request failed:", error);
+    } finally {
+      setRetryingMessageId(null); // Clear retrying state
+    }
+  };
+
   const isPdfProcessed = messages.some(
     (msg) => msg.sender === "AI" && msg.text.includes("processed the document")
   );
@@ -313,6 +373,7 @@ const ChatPage = () => {
           onSendMessage={handleSendMessage}
           onFeedback={handleFeedback}
           onOpenFeedbackModal={openFeedbackModal}
+          retryingMessageId={retryingMessageId}
         />
       )}
 
@@ -326,6 +387,7 @@ const ChatPage = () => {
           onSubmit={(comment) =>
             handleFeedback(currentMessageForFeedback.id, null, comment)
           }
+          onRetry={handleRetry}
           message={currentMessageForFeedback}
         />
       )}

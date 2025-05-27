@@ -1,12 +1,11 @@
-
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ThumbsUp, ThumbsDown, MessageCircle, UserCircle, Bot } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, MessageCircle, UserCircle, Bot, Loader2 } from 'lucide-react'; // 👈 Added Loader2
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
-const ChatMessageItem = ({ message, developerMode, onVote, onComment }) => {
+const ChatMessageItem = ({ message, developerMode, isRetrying, onVote, onComment }) => {
   const isUser = message.sender === 'User';
   const formattedTimestamp = new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
@@ -31,11 +30,25 @@ const ChatMessageItem = ({ message, developerMode, onVote, onComment }) => {
         <Card className={`rounded-xl shadow-md ${isUser ? 'bg-primary text-primary-foreground rounded-br-none' : 'bg-secondary text-secondary-foreground rounded-bl-none'}`}>
           <CardContent className="p-3">
             <p className="text-sm font-semibold mb-1">{message.sender}</p>
-            <p className="text-base whitespace-pre-wrap">{message.text}</p>
+            
+            {/* 👇 Message text or loading spinner */}
+            <p className="text-base whitespace-pre-wrap min-h-[1.5rem]">
+              {isRetrying ? (
+                <span className="flex items-center gap-2 text-muted-foreground italic">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Retrying...
+                </span>
+              ) : (
+                message.text
+              )}
+            </p>
+
             <div className={`text-xs mt-1 ${isUser ? 'text-primary-foreground/70 text-right' : 'text-muted-foreground'}`}>
               {formattedTimestamp}
             </div>
-            {!isUser && (
+
+            {/* 👇 Feedback + Developer mode for assistant messages only */}
+            {!isUser && !isRetrying && (
               <>
                 <div className="mt-2 flex space-x-2 items-center">
                   <Tooltip>
@@ -119,4 +132,3 @@ const ChatMessageItem = ({ message, developerMode, onVote, onComment }) => {
 };
 
 export default ChatMessageItem;
-  

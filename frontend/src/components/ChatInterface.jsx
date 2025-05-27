@@ -10,7 +10,8 @@ const ChatInterface = ({
   developerMode,
   onSendMessage,
   onFeedback,
-  onOpenFeedbackModal
+  onOpenFeedbackModal,
+  retryingMessageId
 }) => {
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef(null);
@@ -36,6 +37,7 @@ const ChatInterface = ({
               key={msg.id}
               message={msg}
               developerMode={developerMode}
+              isRetrying={retryingMessageId === msg.id}
               onVote={(type) => onFeedback(msg.id, type)}
               onComment={() => onOpenFeedbackModal(msg)}
             />

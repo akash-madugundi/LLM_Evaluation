@@ -1,1 +1,23 @@
-Supervised learning involves training models on labeled datasets, where each input is paired with a corresponding output label. Common algorithms include Linear Regression, Support Vector Machines (SVM), and Decision Trees. In contrast, unsupervised learning analyzes unlabeled data to discover inherent patterns or groupings. Popular algorithms include K-Means Clustering, Principal Component Analysis (PCA), and Hierarchical Clustering.
+Difference Between Supervised and Unsupervised Learning
+
+Machine learning can be broadly categorized into supervised and unsupervised learning, each serving different purposes and using different types of data.
+
+1. Supervised Learning
+   - Definition: In supervised learning, the model is trained on a labeled dataset, meaning each training example is paired with an output label.
+   - Goal: The goal is to learn a mapping from inputs to outputs, so the model can predict the label for new, unseen data.
+   - Examples: Classification tasks (e.g., spam detection, image recognition), regression tasks (e.g., predicting house prices).
+   - Algorithms: Linear regression, logistic regression, support vector machines (SVM), decision trees, neural networks.
+   - Key Point: Requires labeled data, which can be expensive and time-consuming to obtain.
+
+2. Unsupervised Learning
+   - Definition: Unsupervised learning involves training models on data without labeled responses. The model tries to find hidden patterns or intrinsic structures in the input data.
+   - Goal: To discover meaningful information, such as grouping or reducing dimensionality, without predefined labels.
+   - Examples: Clustering (e.g., customer segmentation), dimensionality reduction (e.g., PCA), anomaly detection.
+   - Algorithms: K-means clustering, hierarchical clustering, principal component analysis (PCA), autoencoders.
+   - Key Point: Does not require labeled data, making it useful when labeling is not feasible.
+
+Summary:
+- Supervised learning requires labeled input-output pairs and focuses on prediction.
+- Unsupervised learning works with unlabeled data and focuses on discovering structure.
+
+Both approaches are fundamental to machine learning and have diverse applications across industries.

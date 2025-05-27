@@ -19,6 +19,9 @@ from langchain_core.prompts import PromptTemplate
 from bleu.bleu import Bleu
 from rouge.rouge import Rouge
 
+import asyncio
+from asyncio.subprocess import PIPE, create_subprocess_exec
+
 def load_textfiles(references, hypothesis):
     combined_ref = " ".join(line.strip() for line in references)
     combined_hypo = " ".join(line.strip() for line in hypothesis)
@@ -145,6 +148,10 @@ class FeedbackRequest(BaseModel):
     feedback_type: str | None = None  # 'up', 'down', or 'comment'
     comment: str | None = None
 
+class RetryRequest(BaseModel):
+    question: str
+    response: str
+
 @app.post("/upload-pdf")
 async def upload_pdf(file: UploadFile = File(...)):
     global current_index_name
@@ -241,3 +248,69 @@ async def store_feedback(feedback: FeedbackRequest):
         conn.rollback()
         print("DB Insert Error:", e)  # log the error for debugging
         raise HTTPException(status_code=500, detail="Failed to store feedback")
+    
+@app.post("/retry")
+async def retry(data: RetryRequest):
+    prompt = (
+        f"I have a question: {data.question}\n\n"
+        f"And an answer from a language model: {data.response}\n\n"
+        f"Please improve this answer to be more clear, accurate."
+    )
+
+    try:
+        improved_answer = await call_ollama_model(prompt)
+
+        question_lower = data.question.lower()
+
+        # Define keyword sets and associated reference files
+        keyword_triggers = [
+            ({"ai", "applications"}, "reference/ref1.txt"),
+            ({"difference", "supervised", "unsupervised"}, "reference/ref2.txt")
+        ]
+
+        matched_ref_file = None
+        for keywords, ref_file in keyword_triggers:
+            if all(word in question_lower for word in keywords):
+                matched_ref_file = ref_file
+                break
+
+        if matched_ref_file:
+            with open(matched_ref_file, "r", encoding="utf-8") as rf:
+                reference_lines = rf.readlines()
+
+            ref, hypo = load_textfiles(reference_lines, [improved_answer])
+            scores = score(ref, hypo)
+            print("Scores:", scores)
+
+            return {
+                "improved_answer": improved_answer,
+                "metrics": scores
+            }
+        else:
+            return {"improved_answer": improved_answer}
+
+    except RuntimeError as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+import subprocess
+
+async def call_ollama_model(prompt: str) -> str:
+    loop = asyncio.get_running_loop()
+
+    def run_blocking_subprocess():
+        proc = subprocess.Popen(
+            ["ollama", "run", "qwen2.5:0.5b"],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            encoding="utf-8",      # <-- specify UTF-8 encoding here
+            errors="replace", 
+        )
+        stdout, stderr = proc.communicate(input=prompt)
+        if proc.returncode != 0:
+            raise RuntimeError(f"Ollama CLI failed: {stderr.strip()}")
+        return stdout.strip()
+
+    result = await loop.run_in_executor(None, run_blocking_subprocess)
+    return result

@@ -9,3 +9,4 @@ google-generativeai
 pypdf2
 python-multipart
 psycopg2
+asyncio

@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { motion } from "framer-motion";
 
-const FeedbackDialog = ({ isOpen, onClose, onSubmit, message }) => {
+const FeedbackDialog = ({ isOpen, onClose, onSubmit, onRetry, message }) => {
   const [comment, setComment] = useState("");
   const [selectedTags, setSelectedTags] = useState([]);
 
@@ -32,7 +32,9 @@ const FeedbackDialog = ({ isOpen, onClose, onSubmit, message }) => {
   };
 
   const handleSubmit = () => {
-    const tagString = selectedTags.length ? `[${selectedTags.join(", ")}] ` : "";
+    const tagString = selectedTags.length
+      ? `[${selectedTags.join(", ")}] `
+      : "";
     const fullComment = `${tagString}${comment}`;
     onSubmit(fullComment.trim());
     setComment("");
@@ -59,7 +61,9 @@ const FeedbackDialog = ({ isOpen, onClose, onSubmit, message }) => {
 
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
-            <Label className="text-left text-foreground/80">Positive Tags</Label>
+            <Label className="text-left text-foreground/80">
+              Positive Tags
+            </Label>
             <div className="flex flex-wrap gap-2">
               {positiveTags.map((tag) => (
                 <Button
@@ -80,7 +84,9 @@ const FeedbackDialog = ({ isOpen, onClose, onSubmit, message }) => {
           </div>
 
           <div className="grid gap-2">
-            <Label className="text-left text-foreground/80">Negative Tags</Label>
+            <Label className="text-left text-foreground/80">
+              Negative Tags
+            </Label>
             <div className="flex flex-wrap gap-2">
               {negativeTags.map((tag) => (
                 <Button
@@ -101,7 +107,10 @@ const FeedbackDialog = ({ isOpen, onClose, onSubmit, message }) => {
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="feedback-comment" className="text-left text-foreground/80">
+            <Label
+              htmlFor="feedback-comment"
+              className="text-left text-foreground/80"
+            >
               Your Comment
             </Label>
             <Textarea
@@ -121,6 +130,18 @@ const FeedbackDialog = ({ isOpen, onClose, onSubmit, message }) => {
               Cancel
             </Button>
           </DialogClose>
+
+          {selectedTags.some((tag) => negativeTags.includes(tag)) && (
+            <Button
+              type="button"
+              onClick={() => onRetry?.(message)}
+              variant="outline"
+              className="text-red-600 border-red-400 hover:bg-red-500"
+            >
+              Retry
+            </Button>
+          )}
+
           <Button
             type="submit"
             onClick={handleSubmit}
