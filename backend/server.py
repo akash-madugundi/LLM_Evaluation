@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 import os
@@ -6,7 +6,6 @@ import shutil
 import uuid
 import PyPDF2
 import tempfile
-
 import google.generativeai as genai
 from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
 from langchain_community.vectorstores import FAISS
@@ -14,33 +13,15 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain.chains.question_answering import load_qa_chain
 from langchain_core.prompts import PromptTemplate
 
-import asyncio
-from asyncio.subprocess import PIPE, create_subprocess_exec
-
-import json
-from datetime import datetime
-import os
-from collections import defaultdict
 from db import conn
 from models import QueryRequest, PDFContentRequest, FeedbackRequest, RetryRequest
 from utils.scorer import load_textfiles, score
+from utils.logger import log_interaction, load_logs, rank_by_metric, surface_low_scores, detect_regressions
+from utils.ollama_client import call_ollama_model
 
 # Load environment variables
 load_dotenv()
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
-
-LOG_FILE = "logs/qa_log.jsonl"
-
-def log_interaction(question, answer, metrics=None):
-    os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
-    log_entry = {
-        "timestamp": datetime.utcnow().isoformat(),
-        "question": question,
-        "answer": answer,
-        "metrics": metrics or {},
-    }
-    with open(LOG_FILE, "a", encoding="utf-8") as f:
-        f.write(json.dumps(log_entry) + "\n")
 
 # FastAPI setup
 app = FastAPI()
@@ -250,77 +231,6 @@ async def retry(data: RetryRequest):
 
     except RuntimeError as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-import subprocess
-
-async def call_ollama_model(prompt: str) -> str:
-    loop = asyncio.get_running_loop()
-
-    def run_blocking_subprocess():
-        proc = subprocess.Popen(
-            ["ollama", "run", "qwen2.5:0.5b"],
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-            encoding="utf-8",      # <-- specify UTF-8 encoding here
-            errors="replace", 
-        )
-        stdout, stderr = proc.communicate(input=prompt)
-        if proc.returncode != 0:
-            raise RuntimeError(f"Ollama CLI failed: {stderr.strip()}")
-        return stdout.strip()
-
-    result = await loop.run_in_executor(None, run_blocking_subprocess)
-    return result
-
-def load_logs():
-    entries = []
-    if not os.path.exists(LOG_FILE):
-        return entries
-    with open(LOG_FILE, "r", encoding="utf-8") as f:
-        for line in f:
-            entries.append(json.loads(line))
-    return entries
-
-def rank_by_metric(entries, metric_name="ROUGE_L"):
-    # Filter entries with metrics containing the metric_name
-    filtered = [e for e in entries if e.get("metrics") and metric_name in e["metrics"]]
-    # Sort descending by metric score
-    ranked = sorted(filtered, key=lambda e: e["metrics"][metric_name], reverse=True)
-    return ranked
-
-def surface_low_scores(entries, metric_name="ROUGE_L", threshold=0.5):
-    # Return all with score below threshold
-    return [e for e in entries if e.get("metrics", {}).get(metric_name, 1) < threshold]
-
-def detect_regressions(entries, metric_name="ROUGE_L"):
-    # Group by question (or normalized question)
-    question_map = defaultdict(list)
-    for e in entries:
-        q = e["question"].lower()
-        question_map[q].append(e)
-
-    regressions = []
-    for q, q_entries in question_map.items():
-        # Sort by timestamp ascending
-        sorted_entries = sorted(q_entries, key=lambda x: x["timestamp"])
-        for i in range(1, len(sorted_entries)):
-            prev = sorted_entries[i-1]["metrics"].get(metric_name, 1)
-            curr = sorted_entries[i]["metrics"].get(metric_name, 1)
-            if curr < prev:
-                regressions.append({
-                    "question": q,
-                    "previous_score": prev,
-                    "current_score": curr,
-                    "timestamp_prev": sorted_entries[i-1]["timestamp"],
-                    "timestamp_curr": sorted_entries[i]["timestamp"],
-                    "answer_prev": sorted_entries[i-1]["answer"],
-                    "answer_curr": sorted_entries[i]["answer"],
-                })
-    return regressions
-
-from fastapi import Query
 
 @app.get("/analysis")
 async def analysis(
