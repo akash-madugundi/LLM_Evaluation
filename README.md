@@ -129,3 +129,13 @@ uvicorn server:app --reload --port 5000
 
 ## Testing
 - *For testing:* Use `testing.pdf`
+
+---
+
+## PFA
+![Screenshot 2025-06-05 115828](https://github.com/user-attachments/assets/c8b8edca-1bc4-4267-b8d5-8145a55ef34c)
+![Screenshot 2025-06-05 115927](https://github.com/user-attachments/assets/7d102a58-3c17-48c2-ab61-766df44de99f)
+![Screenshot 2025-06-05 115955](https://github.com/user-attachments/assets/32d59e9d-0320-437a-a24b-393033faf83f)
+![Screenshot 2025-06-05 120914](https://github.com/user-attachments/assets/19e789ee-d289-4310-b682-c6b104e7068f)
+![Screenshot 2025-06-05 121050](https://github.com/user-attachments/assets/190860c1-9696-45b9-a5d9-d83ca286884b)
+![Screenshot 2025-06-05 120926](https://github.com/user-attachments/assets/3cad435e-4391-418a-9b44-317473666790)
