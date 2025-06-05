@@ -67,12 +67,31 @@ git clone <repository-url>
 cd LLM_Evaluation
 ```
 
-#### Install dependencies: *(in frontend and backend folders)*
+### 2. Setup Frontend
+#### Install dependencies:
 ```
 npm install
 ```
+#### Set up environment variables (.env file):
+```bash
+VITE_BACKEND_URL=<backend_url>
+```
+#### Run the frontend:
+```
+npm run dev
+```
 
-#### Set up environment variables (.env file): *(in backend folder)*
+### 3. Setup Backend
+#### Create Virtual Environment
+```
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+```
+#### Install Dependencies
+```bash
+pip install -r requirements.txt
+```
+#### Set up environment variables (.env file):
 ```bash
 GOOGLE_API_KEY=AIzaSyCcuxazr__yGZM038YokopKb03o3cjzdA0
 DB_NAME=llm_eval_db
@@ -81,20 +100,9 @@ DB_PASSWORD=9kYts546iqR6JO3Kw0jYV1IJQTF7L4PZ
 DB_HOST=dpg-d0qvvnruibrs73f0kup0-a.oregon-postgres.render.com
 DB_PORT=5432
 ```
-
-#### Set up environment variables (.env file): *(in frontend folder)*
-```bash
-VITE_BACKEND_URL=<backend_url>
-```
-
-#### Run the backend: *(in backend folder)*
+#### Run the backend:
 ```
 uvicorn server:app --reload --port 5000
-```
-
-#### Run the frontend: *(in frontend folder)*
-```
-npm run dev
 ```
 
 ---
